@@ -1,12 +1,15 @@
 ---
 title: "GIS Exercises Week 4"
 author: "J.Blondeau"
-date: "2023-09-10"
+date: "2024-09-12"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+options(width = 750)
 ```
 
 This week you will be working on a project exclusively in the St. Thomas East End Reserve (STEER).  You will use some new tools and some tools you used last week to complete all the questions.  Since this 'project' has a specific task, I would create a new ArcGIS project with an appropriate name so that you could easily go back later for additional work and create map layouts.     
@@ -39,11 +42,11 @@ All the data is the shared OneDrive under Week_4 and include...
 4. Change the symbology of this new layer to show unique colors for each 'HABITAT'.
 5. What is the area (m^2^) of "Coral Reef and Colonized Hardbottom" habitat classification within STEER?
 6. Select all the NCRMP sites samples within STEER and create a new layer from selection.
-7. Change the symbology to 'graduated symbols' on the AVG_HARD_REIEF field (this field is an in-situ habitat rugosity metric).  Adjust the parameters to show NCRMP sites inside STEER with varying degrees of rugosity.
+7. Change the symbology to 'graduated symbols' on the PCT_CORAL field (diver estimated %coral cover).  Adjust the parameters to show NCRMP sites inside STEER with varying degrees of live coral cover.
 
 ##### Bonus
 8. Create a hillshade of the 2 meter raster dataset.  Make multiple hillshades using different parameters (Azimuth, Altitude, Z Factor) so see the differences. 
-9. In the contents pane, place the depth raster layer on top of the hillsahde layer.  Adjust the symbology and transparecy of the depth raster until you like the outcome. 
+9. In the contents pane, place the hillshade raster on top of the bathymetry layer.  Adjust the symbology of the depth raster and adjust the hillshade 'Layer Blend' modes until you like the outcome.
 <br><br>
 
 ### Part 2
@@ -52,4 +55,14 @@ In this fictional scenario, you are tasked with selecting from a large list of m
 
 ##### Bonus
 
-Along with mooring locations being at least 50m away from mapped coral reef or colonized hardbottom, mooring locations must be shallower than 10m depth.  Propose new 'best' site locations.  Hint..."Extract Values to Points", or "Extract Multi Values to Points" (What is the difference?)
+Along with mooring locations being at least 50m away from mapped coral reef or colonized hardbottom, mooring locations must be shallower than 30ft depth.  Propose new 'best' site locations.  Hint..."Extract Values to Points", or "Extract Multi Values to Points" (What is the difference?)
+
+
+
+
+
+
+
+
+
+

@@ -1,12 +1,15 @@
 ---
 title: "Week 4 Exercises"
 author: "J.Blondeau"
-date: "2023-09-09"
+date: "2024-09-12"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+options(width = 750)
 ```
 
 This week we will continue wrangling data in the Tidyverse.  The following are some very common functions you will use in your everyday data world.
