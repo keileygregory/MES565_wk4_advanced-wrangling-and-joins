@@ -67,4 +67,4 @@ All the exercises for this week use the "PSU_Fish_Density.csv" and the "taxonomi
       2017  | BAL VETU    | 0    |0.229  
       2019  | CEP FULV    | 1    |0.308
 
-10. In the "PSU_Fish_Density.csv" data set, the PROT field refers to sites that are inside the VI National Park (PROT = 1) and sites that are outside the Park (PROT = 0).  How many of the 8 species had higher densities inside the National Park?
+10. In the "PSU_Fish_Density.csv" data set, the PROT field refers to sites that are inside the VI National Park (PROT = 1) and sites that are outside the Park (PROT = 0).  How many of the 4 groups had higher densities inside the National Park?
