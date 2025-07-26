@@ -1,0 +1,256 @@
+---
+title: "Data Wrangling and Visualization in R"
+subtitle: "Advanced Wrangling and Joins"
+author: "MMES Fall 2025"
+format: 
+  revealjs:
+    theme: simple
+    slide-number: true
+    chalkboard: true
+---
+
+## Today's Agenda
+
+-   **Mutating Data**: Creating new columns with `mutate()`.
+-   **Conditional Logic**: Using `case_when()` for complex conditions.
+-   **Grouped Operations**: The power of `group_by()`, `summarize()`, and `mutate()`.
+-   **Joining Datasets**: Combining data frames with `left_join()`, `inner_join()`, etc.
+
+---
+
+## Core `dplyr` Verbs: `mutate()`
+
+The `mutate()` function adds new columns or transforms existing ones. The new columns are always added at the end of the data frame.
+
+**Goal**: Calculate coral colony area from length and width columns.
+
+```{r}
+#| echo: true
+#| eval: false
+library(tidyverse)
+
+# Assume 'coral_data' has columns 'length_cm' and 'width_cm'
+coral_data_with_area <- coral_data %>%
+  mutate(area_cm2 = length_cm * width_cm)
+
+# You can also create multiple new columns at once
+coral_data_with_metrics <- coral_data %>%
+  mutate(
+    area_cm2 = length_cm * width_cm,
+    depth_ft = depth_m * 3.28
+  )
+```
+
+---
+
+## Conditional Logic with `case_when()`
+
+`case_when()` is used inside `mutate()` to create a new column based on a series of logical conditions. It's like a more powerful version of an `IF-ELSE` statement.
+
+**Goal**: Create a new column `size_category` based on `area_cm2`.
+
+```{r}
+#| echo: true
+#| eval: false
+library(tidyverse)
+
+categorized_corals <- coral_data_with_area %>%
+  mutate(
+    size_category = case_when(
+      area_cm2 < 50   ~ "Small",
+      area_cm2 >= 50 & area_cm2 < 200 ~ "Medium",
+      area_cm2 >= 200 ~ "Large",
+      TRUE ~ "Unknown" # A default value if none of the above match
+    )
+  )
+```
+
+---
+
+## Grouped Operations: `group_by()`
+
+The `group_by()` function doesn't change the data itself, but it adds grouping information. Subsequent `dplyr` verbs will then operate on each group independently. This is one of the most powerful ideas in `dplyr`.
+
+```{r}
+#| echo: true
+#| eval: false
+library(tidyverse)
+
+# Group the coral data by species. 
+# The output looks the same, but it now has a hidden grouping structure.
+grouped_by_species <- coral_data %>%
+  group_by(species_name)
+```
+
+---
+
+## The Power Duo: `group_by()` + `summarize()`
+
+This is the most common data analysis pattern: **grouping** a dataset and then **summarizing** each group. This **collapses** the data frame to one row per group.
+
+**Goal**: Calculate the average depth and number of colonies for each species.
+
+```{r}
+#| echo: true
+#| eval: false
+library(tidyverse)
+
+species_summary <- coral_data %>%
+  group_by(species_name) %>%
+  summarize(
+    mean_depth = mean(depth_m, na.rm = TRUE),
+    colony_count = n() # n() is a special function that counts rows in the current group
+  )
+```
+
+---
+
+## Another Power Duo: `group_by()` + `mutate()`
+
+What if you want to add a group's summary statistic back to the original data? For this, you use `mutate()` after a `group_by()`. This **does not collapse** the data.
+
+**Goal**: Add a new column showing the average depth *for that species* to each row.
+
+```{r}
+#| echo: true
+#| eval: false
+library(tidyverse)
+
+# The original number of rows is preserved
+data_with_species_avg <- coral_data %>%
+  group_by(species_name) %>%
+  mutate(species_avg_depth = mean(depth_m, na.rm = TRUE))
+```
+
+---
+
+## Summarize vs. Mutate: The Setup
+
+Let's see the difference with a simple example. For the next two slides, we will use this data frame:
+
+```{r}
+#| echo: true
+#| eval: true
+library(tidyverse)
+# A simple data frame
+coral_simple <- tibble(
+  species = c("A. palmata", "A. palmata", "O. faveolata"),
+  depth = c(5, 7, 12)
+)
+coral_simple
+```
+
+---
+
+## Comparison: `summarize()`
+
+`summarize()` **collapses** the data, creating a new, smaller data frame with one row per group.
+
+```{r}
+#| echo: true
+#| eval: true
+coral_simple %>% 
+  group_by(species) %>% 
+  summarize(avg_depth = mean(depth))
+```
+
+---
+
+## Comparison: `mutate()`
+
+`mutate()` **adds a column** to the existing data, keeping all original rows. The group summary is repeated for each row in the group.
+
+```{r}
+#| echo: true
+#| eval: true
+coral_simple %>% 
+  group_by(species) %>% 
+  mutate(avg_depth = mean(depth))
+```
+
+---
+
+## Joining Datasets
+
+Often, your data is split across multiple tables. For example, one table has coral observations, and another has information about the sites. **Joins** are used to combine these tables based on a common "key" column.
+
+**Caution**: Always be careful with joins! An incorrect join can unintentionally duplicate or remove data.
+
+---
+
+## Sample Data for Joins
+
+Let's imagine we have two data frames:
+
+```{r}
+#| echo: true
+#| eval: true
+library(tidyverse)
+# Table 1: Coral observations
+coral_observations <- tibble(
+  site_id = c("A", "A", "B", "D"),
+  species = c("A. palmata", "O. faveolata", "A. cervicornis", "S. siderea")
+)
+# Table 2: Site information
+site_info <- tibble(
+  site_id = c("A", "B", "C"),
+  location = c("Reef Bay", "Lameshur Bay", "Salt Pond Bay")
+)
+```
+
+Our goal is to combine them. The common key is `site_id`.
+
+---
+
+## `left_join()`
+
+A `left_join()` keeps **all rows** from the *left* data frame (`coral_observations`) and adds matching information from the right. If there's no match, it fills with `NA`.
+
+```{r}
+#| echo: true
+#| eval: true
+# Notice site "D" is kept, but its location is NA.
+# Site "C" from site_info is dropped because it's not in the left frame.
+left_join(coral_observations, site_info, by = "site_id")
+```
+
+---
+
+## `right_join()`
+
+A `right_join()` keeps **all rows** from the *right* data frame (`site_info`) and adds matching information from the left.
+
+```{r}
+#| echo: true
+#| eval: true
+# Notice site "C" is now kept, but its species is NA.
+# Site "D" from coral_observations is dropped.
+right_join(coral_observations, site_info, by = "site_id")
+```
+
+---
+
+## `inner_join()`
+
+An `inner_join()` **only keeps rows** that have a matching key in **both** data frames. This is the most conservative join and is often the safest.
+
+```{r}
+#| echo: true
+#| eval: true
+# Notice only sites "A" and "B" are kept, because they exist in both tables.
+# Sites "C" and "D" are both dropped.
+inner_join(coral_observations, site_info, by = "site_id")
+```
+
+---
+
+## `full_join()`
+
+A `full_join()` keeps **all rows** from **both** data frames. It's the "keep everything" join. Where there are no matches, it fills with `NA`.
+
+```{r}
+#| echo: true
+#| eval: true
+# Notice all sites A, B, C, and D are kept.
+full_join(coral_observations, site_info, by = "site_id")
+```
