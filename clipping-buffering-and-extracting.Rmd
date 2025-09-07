@@ -1,7 +1,7 @@
 ---
 title: "GIS Exercises Week 4"
 author: "J.Blondeau"
-date: "2025-07-27"
+date: "`r Sys.Date()`"
 output: html_document
 ---
 
@@ -12,11 +12,11 @@ knitr::opts_chunk$set(echo = TRUE,
 options(width = 750)
 ```
 
-This week you will be working on a project exclusively in the St. Thomas East End Reserve (STEER).  You will use some new tools and some tools you used last week to complete all the questions.  Since this 'project' has a specific task, I would create a new ArcGIS project with an appropriate name so that you could easily go back later for additional work and create map layouts.     
+This week you will be working on a project exclusively in the St. Thomas East End Reserve (STEER).  You will use some new tools and some tools you used last week to complete all the questions.   
 
 ***
 ## Data
-All the data is the shared OneDrive under Week_4 and include...
+Most the data is the class exercise folder you already downloaded...
 
 3 shapefiles
 
@@ -30,6 +30,8 @@ All the data is the shared OneDrive under Week_4 and include...
 
 1 .csv 
 
+* I forgot to add this dataset to the 'Class Exercise Data' folder.  Please download this specific file from our shared GDrive.
+
 - sttstj_ncrmp_hab.csv
 
 ***
@@ -41,7 +43,7 @@ All the data is the shared OneDrive under Week_4 and include...
 3. Clip the NOAA habitat map feature using the STEER boundary feature.  We only want to work with data inside the STEER reserve.
 4. Change the symbology of this new layer to show unique colors for each 'HABITAT'.
 5. What is the area (m^2^) of "Coral Reef and Colonized Hardbottom" habitat classification within STEER?
-6. Select all the NCRMP sites samples within STEER and create a new layer from selection.
+6. Select all the NCRMP sites sampled within STEER and create a new layer from selection.
 7. Change the symbology to 'graduated symbols' on the PCT_CORAL field (diver estimated %coral cover).  Adjust the parameters to show NCRMP sites inside STEER with varying degrees of live coral cover.
 
 ##### Bonus
