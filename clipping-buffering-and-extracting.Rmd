@@ -2,69 +2,255 @@
 title: "GIS Exercises Week 4"
 author: "J.Blondeau"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  html_document:
+    theme: flatly
+    highlight: tango
+    css: style.css
 ---
 
-```{r setup, echo=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
-                      warning = FALSE,
-                      message = FALSE)
-options(width = 750)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This week you will be working on a project exclusively in the St. Thomas East End Reserve (STEER).  You will use some new tools and some tools you used last week to complete all the questions.   
+**Most of the data is the class exercise folder you already downloaded...**
 
-***
-## Data
-Most the data is the class exercise folder you already downloaded...
+3 shapefiles (`STTSTJ_NOAA_Habitiat_Map`, `STEER_Boundary`, `ProposedMooringLocations`)
 
-3 shapefiles
+1 raster dataset (`steer_1m`)
 
-- STTSTJ_NOAA_Habitiat_Map
-- STEER_Boundary
-- ProposedMooringLocations
+1 CSV (`sttstj_ncrmp_hab.csv`) *\*file in .xlsx format in Class Exercise Data folder?*
 
-1 raster dataset
+```{r}
+# This week you will be working on a project exclusively in the St. Thomas East End Reserve (STEER). You will use some new tools and some tools you used last week to complete all the questions.
+```
 
-- steer_1m
+------------------------------------------------------------------------
 
-1 .csv 
+# [**Part 1**]{.underline}
 
-* I forgot to add this dataset to the 'Class Exercise Data' folder.  Please download this specific file from our shared GDrive.
+## **1) Import all the data into your project directory (3 shapefiles and raster dataset).**
 
-- sttstj_ncrmp_hab.csv
+**View** tab in top ribbon bar \> **Catalog View** \> **Catalog** top ribbon \> **+Add** drop-down \> **Add Folder Connection** \> navigate to `C:\Users\900123629\Documents\ArcGIS` \> select `MES565 Class Exercise Data` folder \> click **Ok**.
 
-***
+In the [Contents]{.underline} side pane with [Catalog View]{.underline} open, navigate to `Project\Folders\MES565 Class Exercise Data\MMES_GIS.gdb`.
 
+-   Right-click the `steer_1m_bathymetry` raster file to add it to the map.
+-   Open the `polygons` folder
+    -   Right-click each of the `STTSTJ_NOAA_Habitiat_Map`, `STEER_Boundary`, and `ProposedMooringLocations` shapefiles to add each to the map.
 
-### Part 1
-1. Import all the data into your project directory (3 shapefiles and raster dataset).  
-2. Create a shapefile (point) from the sttstj_ncrmp_hab.csv
-3. Clip the NOAA habitat map feature using the STEER boundary feature.  We only want to work with data inside the STEER reserve.
-4. Change the symbology of this new layer to show unique colors for each 'HABITAT'.
-5. What is the area (m^2^) of "Coral Reef and Colonized Hardbottom" habitat classification within STEER?
-6. Select all the NCRMP sites sampled within STEER and create a new layer from selection.
-7. Change the symbology to 'graduated symbols' on the PCT_CORAL field (diver estimated %coral cover).  Adjust the parameters to show NCRMP sites inside STEER with varying degrees of live coral cover.
+## **2) Create a shapefile (point) from `sttstj_ncrmp_hab.csv`.**
 
-##### Bonus
-8. Create a hillshade of the 2 meter raster dataset.  Make multiple hillshades using different parameters (Azimuth, Altitude, Z Factor) so see the differences. 
-9. In the contents pane, place the hillshade raster on top of the bathymetry layer.  Adjust the symbology of the depth raster and adjust the hillshade 'Layer Blend' modes until you like the outcome.
-<br><br>
+Open the **Excel to Table (Conversion)** tool from search bar:
 
-### Part 2
+```{r}
+# Input Excel File: C:\Users\900123629\Documents\ArcGIS\MES565 Class Exercise Data\sttstj_ncrmp_hab.xlsx 
+# Output Table: sttstj_ncrmp_hab_ExcelToTable
+# Sheet: sttstj_ncrmp_hab.csv
+# Rows To Use As Field Names: 1
+```
 
-In this fictional scenario, you are tasked with selecting from a large list of mooring locations inside STEER from the  ProposedMooringLocations shapefile all the locations that are at least 50m away from any mapped coral reef or colonized hardbottom.  There are multiple ways you could solve this task, but I would like for you to use the buffer tool.  DPNR only has enough funding for 5 moorings.  Which 5 would you propose DPNR install?  Adjust the symbology for all the layers to make it clear which locations are appropriate and which 5 locations you are proposing as ideal.  
+In the [Contents]{.underline} side pane under '[Standalone Tables]{.underline}', right-click the `sttstj_ncrmp_hab_ExcelToTable` table \> **Create Points From Table** \> **XY Table To Point**:
 
-##### Bonus
+```{r}
+# Input Table: sttstj_ncrmp_hab_ExcelToTable 
+# Output Feature Class: sttstj_ncrmp_hab
+# X Field: LON_DEGREES
+# Y Field: LAT_DEGREES
+# Coordinate System: GCS_WGS_1984 (default, do not change)
+```
 
-Along with mooring locations being at least 50m away from mapped coral reef or colonized hardbottom, mooring locations must be shallower than 30ft depth.  Propose new 'best' site locations.  Hint..."Extract Values to Points", or "Extract Multi Values to Points" (What is the difference?)
+## **3) Clip the NOAA habitat map feature using the STEER boundary feature. We only want to work with data inside the STEER reserve.**
 
+Open the **Pairwise Clip (Analysis)** tool from search bar:
 
+```{r}
+# Input Features: STTSTJ_NOAA_Habitiat_Map 
+# Clip Features: STEER_Boundary 
+# Output Feature Class: NOAA_clipSTEER
+```
 
+## **4) Change the symbology of this new layer to show unique colors for each `HABITAT`.**
 
+In the [Contents]{.underline} side pane under '[Map]{.underline}', select the newly created `NOAA_clipSTEER` shapefile. **Feature Layer** top ribbon \> **Symbology**:
 
+```{r}
+# Primary symbology drop-down menu: Unique Values
+# Field 1: HABITAT
+# *style colors for each habitat type as desired*
+```
 
+## **5) What is the area (m^2^) of `Coral Reef and Colonized Hardbottom` habitat classification within STEER?**
 
+Open the **Pairwise Dissolve (Analysis)** tool from search bar:
 
+```{r}
+# Input Features: NOAA_clipSTEER
+# Output Feature Class: NOAA_clipSTEER_pwdHABITAT
+# Dissolve Fields: HABITAT
+# Statistics Fields > Field: AREA | Statistic Type: Sum
+```
 
+In the [Contents]{.underline} side pane under '[Map]{.underline}', select the newly created `NOAA_clipSTEER_pwdHABITAT` shapefile. **Data** top ribbon \> open **Attribute Table**. Look at the value in the `SUM_AREA` column for the row with `HABITAT` column value *`Coral Reef and Colonized Hardbottom`*.
 
+::: callout-important
+**Answer:** The total area of the "Coral Reef and Colonized Hardbottom" habitat classification within the STEER boundary is **4,756,037.69 m^2^**.
+:::
+
+## **6) Select all the NCRMP sites sampled within STEER and create a new layer from selection.**
+
+Open the **Pairwise Clip (Analysis)** tool from search bar:
+
+```{r}
+# Input Features: sttstj_ncrmp_hab 
+# Clip Features: STEER_Boundary 
+# Output Feature Class: ncrmp_clipSTEER
+```
+
+## **7) Change the symbology to 'graduated symbols' on the `PCT_CORAL` field (diver estimated % coral cover). Adjust the parameters to show NCRMP sites inside STEER with varying degrees of live coral cover.**
+
+In the [Contents]{.underline} side pane under '[Map]{.underline}', select the newly created `ncrmp_clipSTEER` shapefile. **Feature Layer** top ribbon \> **Symbology**:
+
+```{r}
+# Primary symbology drop-down menu: Graduated Symbols
+# Field: PCT_CORAL
+# Normalization: <None>
+# Method: Natural Breaks (Jenks)
+# Classes: 10
+# Minimum size: 5 pt | Maximum size: 25 pt
+# Template: *click symbol to format as desired*
+```
+
+## **8) Create a hillshade of the 1 meter raster dataset. Make multiple hillshades using different parameters (Azimuth, Altitude, Z Factor) to see the differences.**
+
+Open the **Hillshade (Spatial Analyst)** tool from search bar:
+
+-   `Azimuth` is the compass direction from which the sun is shining (0–360 degrees); default is 315 degrees (northwest lighting).
+-   `Altitude` is the sun's angle above the horizon (0–90 degrees); default is 45 degrees.
+-   `Z factor` is a scaling factor applied to exaggerate elevation differences; default is 1 (\*do NOT change unless x,y units are different from z-units).
+
+```{r}
+# Input raster: steer_1m_bathymetry
+# Output raster: hillshade_steer1mbathy
+# Azimuth: 315 (default)
+# Altitude: 45 (default)
+# Z factor: 1 (default)
+
+# tried other values for Azimuth and Altitude, but defaults looked best
+```
+
+## **9) In the contents pane, place the hillshade raster on top of the bathymetry layer. Adjust the symbology of the depth raster and adjust the hillshade 'Layer Blend' modes until you like the outcome.**
+
+In the [Contents]{.underline} side pane under '[Map]{.underline}', select the newly created `hillshade_steer1mbathy` raster. **Raster Layer** top ribbon \> **Symbology**:
+
+```{r}
+# Primary symbology: Stretch
+# Color scheme: Depth (Realistic & Thematic - Classified)
+# Stretch type: Standard Deviation | Number of standard deviations: 2
+# Gamma: 1.0
+```
+
+**Raster Layer** top ribbon \> **Effects** \> Transparency: `25.0%`, Layer Blend: `Linear Dodge`.
+
+------------------------------------------------------------------------
+
+# [**Part 2**]{.underline}
+
+## **In this fictional scenario, you are tasked with selecting from a large list of mooring locations located inside STEER (`ProposedMooringLocations` shapefile). Select all the mooring locations that are at least 50m away from any mapped coral reef or colonized hardbottom. There are multiple ways you could solve this task, but I would like for you to use the buffer tool. DPNR only has enough funding for 5 moorings. Which 5 would you propose DPNR install? Adjust the symbology for all the layers to make it clear which locations are appropriate and which 5 locations you are proposing as ideal.**
+
+In the [Contents]{.underline} side pane under '[Map]{.underline}', select the `NOAA_clipSTEER` shapefile. **Data** top ribbon \> open **Attribute Table** \> **Select By Attributes** tool:
+
+```{r}
+# Input Rows: NOAA_clipSTEER
+# Selection Type: New selection
+# Where: 'HABITAT' 'is equal to' 'Coral Reef and Colonized Hardbottom'
+```
+
+-   **Data** top ribbon \> **Layer From Selection** \> rename new layer as `NOAA_clipSTEER_habitatCRCH`.
+
+Open the **Pairwise** **Buffer (Analysis)** tool from search bar:
+
+```{r}
+# Input Features: NOAA_clipSTEER_habitatCRCH
+# Output Feature Class: NOAA_clipSTEER_habitatCRCH_pwb50m
+# Distance [value or field]: Linear Unit, 50, Meters
+# Method: Planar
+# Dissolve Type: Dissolve all output features into a single feature
+```
+
+Open the **Select Layer By Location (Data Management)** tool from search bar:
+
+```{r}
+# Input Features: ProposedMooringLocations
+# Relationship: Intersect
+# Selecting Features: NOAA_clipSTEER_habitatCRCH_pwb50m
+# Selection Type: New selection
+# **CHECK BOX** ☑ Invert Spatial Relationship
+```
+
+-   In the [Contents]{.underline} side pane under '[Map]{.underline}', select the `ProposedMooringLocations` shapefile. **Data** top ribbon \> **Layer From Selection** \> rename new layer as `Mooring_CRCHbuffer50m`.
+
+::: callout-warning
+**Warning:** [DIDN'T FINISH PICKING FINAL 5 MOORINGS BECAUSE DIDN'T KNOW WHAT CRITERIA TO GO BY...]{.underline} (added section for **Near (Analysis)** tool so would know how to calculate distance in future scenarios, **BUT ignoring results** for the purpose of this activity)!
+:::
+
+Open the **Near (Analysis)** tool from search bar:
+
+```{r}
+# Input Features: Mooring_CRCHbuffer50m
+# Near Features: NOAA_clipSTEER_habitatCRCH
+# Search Radius: (leave blank)
+# *CHECK BOX* ☑ Location (this adds NEAR_X and NEAR_Y columns)
+# Method: Planar
+# Field Names > Property: Feature ID | Field Name: NEAR_FID
+# Field Names > Property: Distance | Field Name: NEAR_DIST
+# Field Names > Property: Location x-coordinate | Field Name: NEAR_X
+# Field Names > Property: Location y-coordinate | Field Name: NEAR_Y
+# Distance Unit: Meters
+```
+
+-   In the [Contents]{.underline} side pane under '[Map]{.underline}', select the `Mooring_CRCHbuffer50m` shapefile. **Data** top ribbon \> open **Attribute Table**.
+    -   `NEAR_FID` column is the ID of the nearest coral reef/colonized hardbottom feature
+    -   `NEAR_DIST` is the distance in meters to the nearest coral reef/colonized hardbottom feature
+    -   `NEAR_X` and `NEAR_Y` are the coordinates of the nearest coral reef/colonized hardbottom feature
+-   **Table** top ribbon \> **Sort** drop-down menu \> **Custom Sort** \> Field: `NEAR_DIST` \| Sort: Descending.
+-   **Manually select** the first 5 rows in the sorted Attribute Table *(aka the 5 rows with the greatest distance to the nearest coral reef/colonized hardbottom feature)*.
+
+## **Along with mooring locations being at least 50m away from mapped coral reef or colonized hardbottom, mooring locations must be shallower than 30ft depth. Propose new 'best' site locations. (*hint...* "Extract Values to Points" tool or "Extract Multi Values to Points" tool – what is the difference?)**
+
+|  |  |  |
+|:---|:---|:---|
+| **Feature** | **Extract Values to Points** tool | **Extract Multi Values to Points** tool |
+| Number of rasters | 1 only | 2 or more |
+| Output | Creates a new feature class | Updates existing feature class |
+| Fields added | `RASTERVALU` | 1 new field/raster (manually named) |
+| Best use case | Quick extraction from single raster | Build dataset from multiple rasters |
+
+Open the **Extract Values to Points (Spatial Analyst)** tool from search bar:
+
+```{r}
+# Input point features: Mooring_CRCHbuffer50m
+# Input raster: steer_1m_bathymetry
+# Output point features: Mooring_CRCHbuffer50m_depth
+```
+
+In the [Contents]{.underline} side pane under '[Map]{.underline}', select the newly created `Mooring_CRCHbuffer50m_depth` shapefile. **Data** top ribbon \> open **Attribute Table**.
+
+-   `RASTERVALU` column contains the depth (in meters) of each mooring location (aka each row)
+    -   Rows with `<Null>` in `RASTERVALU` column are outside of area covered by `steer_1m_bathymetry` raster
+
+**Select By Attributes** tool:
+
+-   Since you want only the moorings located in water shallower than 30 ft and depth values are negative, you want to select only rows with a `RASTERVALU` greater than -9.144
+
+```{r}
+# Input Rows: Mooring_CRCHbuffer50m_depth
+# Selection Type: New selection
+# Where: 'RASTERVALU' 'is greater than' '-9.144'
+```
+
+**Data** top ribbon \> **Layer From Selection** \> rename new layer as `Mooring_CRCHbuffer50m_shallower30ft`.
+
+::: callout-warning
+**Warning:** DIDN'T FINISH PICKING FINAL 5 MOORINGS, [**BUT**]{.underline} since the mooring points in `Mooring_CRCHbuffer50m_shallower30ft` are clustered into 5 separate areas within the STEER boundary, would probably pick the 1 point from each cluster that has highest `NEAR_DIST` value (aka furthest from a coral reef/colonized hardbottom feature)!
+:::

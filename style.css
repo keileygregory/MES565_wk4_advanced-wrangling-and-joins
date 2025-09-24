@@ -1,0 +1,174 @@
+/* ============================
+   Global Body Text
+   ============================ */
+body {
+  color: black;            /* headers and default text stay black */
+  font-size: 15px;
+  line-height: 1.5;
+  background-color: white; /* clean background */
+}
+
+/* Paragraph "Normal" text, but NOT inside callouts */
+p:not(.callout-note p):not(.callout-warning p):not(.callout-tip p):not(.callout-important p) {
+  color: black;
+}
+
+/* ============================
+   Inline Code (like `filter(sites)`)
+   ============================ */
+code {
+  color: #4b5db8;
+  font-weight: 500;
+}
+
+/* ============================
+   Code Chunks (source code ONLY)
+   ============================ */
+pre code {
+  font-size: 0.9em;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #80a9f2;   /* default cornflower blue */
+}
+
+/* Comments (# ...) */
+pre code .c,
+pre code .co,
+pre code .com,
+pre code .hl.com {
+  color: #cc97f0;   /* pastel lavender */
+  font-style: italic;
+}
+
+/* Strings ("PVMT", 'AGRF') */
+pre code .st { color: #008080; }
+
+/* Numbers (2001, 3.14) */
+pre code .dv, 
+pre code .fl { color: #630358; }
+
+/* Keywords (function, if, else, return, TRUE, FALSE) */
+pre code .kw { color: #1b02d4; font-weight: bold; }
+
+/* Operators (<-, +, |, %>%, %in%) */
+pre code .op { color: #ba006d; }
+
+/* Function names (mutate, filter, glimpse) */
+pre code .fu { color: #5c02f7; font-weight: bold; }
+
+/* ============================
+   Callouts - Fenced Divs (Variants)
+   ============================ */
+
+/* Base callout box */
+.callout-note,
+.callout-warning,
+.callout-tip,
+.callout-important {
+  padding: 0.8em 1em;
+  border-left: 6px solid;
+  border-radius: 10px;
+  margin: 1em 0;
+}
+
+/* Headings inside callouts */
+.callout-note > h1, .callout-note > h2, .callout-note > h3,
+.callout-warning > h1, .callout-warning > h2, .callout-warning > h3,
+.callout-tip > h1, .callout-tip > h2, .callout-tip > h3,
+.callout-important > h1, .callout-important > h2, .callout-important > h3 {
+  margin-top: 0;
+}
+
+/* NOTE (blue) */
+.callout-note { background-color: #c5d5fc; border-color: #3b72ff; color: #111; }
+.callout-note strong { color: #1602ad; }
+
+/* WARNING (yellow) */
+.callout-warning { background-color: #fff8db; border-color: #dbb100; color: #453301; }
+.callout-warning strong { color: #ffd62b; }
+
+/* TIP (lavender / purple) */
+.callout-tip { background-color: #f4eaff; border-color: #8e5cd6; color: #2e174d; }
+.callout-tip strong { color: #5a2ca0; }
+
+/* IMPORTANT (pink) */
+.callout-important { background-color: #ffe6f0; border-color: #ff4da6; color: #4a0e2e; }
+.callout-important strong { color: #cc0066; }
+
+/* ============================
+   Tables & Images
+   ============================ */
+img { max-width: 100%; height: auto; }
+.table-responsive, .datatables { overflow-x: auto; }
+
+/* ============================
+   R Console / Output Text ONLY
+   (Quarto + R Markdown)
+   ============================ */
+
+/* Quarto outputs */
+.cell-output,
+.cell-output pre,
+.cell-output code,
+.cell-output-stdout pre,
+.cell-output-stderr pre,
+.cell-output-error pre,
+.cell-output-display pre,
+.cell-output-stdout code,
+.cell-output-stderr code,
+.cell-output-error code,
+.cell-output-display code { color: #8f8f8f !important; }
+
+/* R Markdown classic: output that follows a code chunk */
+div.sourceCode + pre,
+div.sourceCode + pre code,
+div.sourceCode ~ pre,
+div.sourceCode ~ pre code { color: #8f8f8f !important; }
+
+/* Ensure we NEVER recolor the source code itself */
+div.sourceCode pre code { color: #80a9f2 !important; }
+
+/* ============================
+   Printing
+   ============================ */
+@page { margin: 18mm; }
+
+/* ---------- FORCE COLORS IN PRINT ---------- */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+  }
+
+  /* headers black */
+  body { color: black !important; }
+
+  /* paragraph text dark grey-black */
+  p { color: black !important; }
+
+  /* inline code */
+  code { color: #4b5db8 !important; font-weight: 500 !important; }
+
+  /* chunk code default (source code) */
+  div.sourceCode pre code,
+  pre code { color: #80a9f2 !important; }  /* cornflower */
+
+  /* comments */
+  pre code .c,
+  pre code .co,
+  pre code .com,
+  pre code .hl.com { color: #cc97f0 !important; font-style: italic !important; }
+
+  /* strings / numbers / keywords / functions / operators */
+  pre code .st { color: #008080 !important; }
+  pre code .dv, pre code .fl { color: #630358 !important; }
+  pre code .kw { color: #1b02d4 !important; font-weight: bold !important; }
+  pre code .fu { color: #5c02f7 !important; font-weight: bold !important; }
+  pre code .op { color: #ba006d !important; }
+
+  /* outputs (only) */
+  .cell-output, .cell-output pre, .cell-output code,
+  div.sourceCode + pre, div.sourceCode + pre code,
+  div.sourceCode ~ pre, div.sourceCode ~ pre code { color: #8f8f8f !important; }
+}

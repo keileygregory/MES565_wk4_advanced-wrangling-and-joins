@@ -2,69 +2,266 @@
 title: "Advanced Wrangling and Joins"
 author: "J.Blondeau"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  html_document:
+    theme: flatly
+    highlight: tango
+    css: style.css
 ---
 
-```{r setup, echo=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
-                      warning = FALSE,
-                      message = FALSE)
-options(width = 750)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This week we will continue wrangling data in the Tidyverse.  The following are some very common functions you will use in your everyday data world.
+> **This week we will continue wrangling data in the Tidyverse. The following are some very common functions you will use in your everyday data world.**
+>
+> -   merge()
+> -   mutate()
+> -   case_when()
+> -   group_by()
+> -   summarize()
 
-- merge()
-- mutate()
-- case_when()
-- group_by()
-- summarize()
+**All the exercises for this week use the "PSU_Fish_Density.csv" and the "taxonomic_data.csv" data sets.**
 
+```{r}
+library(tidyverse) # includes library(readr) package
 
-All the exercises for this week use the "PSU_Fish_Density.csv" and the "taxonomic_data.csv" data sets.
+# STRAT represents environment type, PROT represents protection level
+density <- read_csv("data/PSU_Fish_Density.csv") 
 
-1. Add the common name (only common name) of each species in the density data set as a new field.  
-    - Reorder the columns to be more readable.
+# LC represents length of capture, LM represents length of maturity (at 50%), WLEN_A represents von Bertalanffy growth parameter A, WLEN_B represents von Bertalanffy growth parameter B
+taxonomic <- read_csv("data/taxonomic_data.csv")
+```
 
-2. Add a new field to the density data set named "fishery_target" at set all to TRUE
+## **1) Add the common name (only common name) of each species in the density data set as a new field.**
 
-3. Add a new field named "group" at set the value based on fish species where...
-    - grouper = Coney, Red hind, 
-    - sanpper = Mutton, Gray, Yellowtail
-    - parrotfish = Stoplight
-    - other = Triggerfish, Hogfish
-    
-4. Using the group_by function, how many unique PRIMARY_SAMPLE_UNITS were sampled in each YEAR?
+The function `left_join(density, taxonomic, by = "SPECIES_CD")` will add **ALL columns** from `"taxonomic"` df into `"density"` df wherever `SPECIES_CD` matches.
 
-5. How many unique PRIMARY_SAMPLE_UNITS were sampled in each YEAR and PROT combination?
+In order to **select for certain columns** in `taxonomic` df, add `%>% select()` function to the that df's argument in the `left_join()` function. Make sure the `%>% select()` function includes the column(s) you want to add to the other df (`COMNAME`) [**AND**]{.underline} the column you are matching by (`SPECIES_CD`).
 
-6. How many unique PRIMARY_SAMPLE_UNITS were sampled in each YEAR, PROT and STRAT combination?
+::: callout-important
+**Important:** `*_join()` functions require the **same data type** for data in the **column you are matching by**!
+:::
 
-7. What is the difference between the following two expressions?  The summarize and mutate calls after the group_by do very different things.  In what situations would you use them?
-    
-    - data %>% # data here is the "PSU_Fish_Density" data set
-        <br></br>
-        group_by(YEAR) %>% 
-        <br></br>
-        summarize( n = n_distinct(PRIMARY_SAMPLE_UNIT))
+::: callout-tip
+**Tip:** Structure of the **left_join function** is `left_join(df_cols_added_to, df_cols_pulled_from, by = "col_to_match_by")`
+:::
 
-    - data %>%
-        <br></br>
-        group_by(YEAR) %>% 
-        <br></br>
-        mutate( n = n_distinct(PRIMARY_SAMPLE_UNIT))
-        
-        
-8. Create a new dataframe that shows mean density of each species per year...hint
-    - YEAR  | SPECIES_CD  | meanDensity
-      ----- | ----------  | -----------
-      2017  | BAL VETU    |    0.224   
-      2019  | CEP FULV    |    0.685
-      
-9. Create a new dataframe that shows mean density of each species in each PROT per year...hint
-    - YEAR  | SPECIES_CD  | PROT | meanDensity
-      ----- | ----------  | -----|-----------
-      2017  | BAL VETU    | 0    |0.229  
-      2019  | CEP FULV    | 1    |0.308
+```{r}
+density_comname <- left_join(density,
+                             taxonomic %>% select(SPECIES_CD, COMNAME), # select certain cols
+                             by = "SPECIES_CD")
+```
 
-10. In the "PSU_Fish_Density.csv" data set, the PROT field refers to sites that are inside the VI National Park (PROT = 1) and sites that are outside the Park (PROT = 0).  How many of the 4 groups had higher densities inside the National Park?
+### **Reorder the columns to be more readable.**
+
+The `density_comname[, ... ]` function subsets the dataframe `density_comname`. The part before the comma (`[,`) specifies rows; since nothing is written before the comma, all rows are kept.
+
+```{r}
+# Organized as taxonomic info (species code, common name), where measured (region/habitat type/protection level), when measured (year), how measured (sample unit), measured value (density)
+density_reorder <- density_comname[, c("SPECIES_CD", "COMNAME", "REGION", "STRAT", "PROT", "YEAR", "PRIMARY_SAMPLE_UNIT", "density")]
+```
+
+## **2) Add a new field to the density data set named "fishery_target" at set all to TRUE.**
+
+::: callout-tip
+**Tip:** Boolean requires "TRUE" (not "true")!
+:::
+
+```{r}
+# Add column (fishery_target) with constant value ("TRUE") for all rows
+density_fisherytarget <- density_reorder %>% mutate(fishery_target = "TRUE")
+```
+
+## **3) Add a new field named "group" and set the value based on fish species where: [grouper]{.underline} = coney (CEP FULV), red hind (EPI GUTT); [snapper]{.underline} = mutton (LUT ANAL), gray (LUT GRIS), yellowtail (OCY CHRY); [parrotfish]{.underline} = stoplight (SPA VIRI); [other]{.underline} = triggerfish (BAL VETU), hogfish (LAC MAXI).**
+
+The `case_when()` function **assigns values to the new column based on complex criteria**.
+
+`SPECIES_CD %in% c()` is **logical test** that checks if the value in `SPECIES_CD` column belongs to a vector of values `c(value1, value2, etc.)`. The logical test returns `TRUE` if the specified value is in the vector, or `FALSE` if it is not. `SPECIES_CD ==` is also a **logical test** that checks if the value is equal to specific value.
+
+The `~ ""` argument tells R that if the logical test returns `TRUE`, then assign value `""` to the new column (`group`).
+
+```{r}
+density_groups <- density_fisherytarget %>%
+  mutate(group = case_when(
+    SPECIES_CD %in% c ("CEP FULV", "EPI GUTT") ~ "grouper",
+    SPECIES_CD %in% c("LUT ANAL", "LUT GRIS", "OCY CHRY") ~ "snapper",
+    SPECIES_CD == "SPA VIRI" ~ "parrotfish",
+    SPECIES_CD %in% c("BAL VETU", "LAC MAXI") ~ "other",
+    TRUE ~ "unclassified" # fallback for any common names not listed above
+  ))
+```
+
+## **4) Using the group_by function, how many unique PRIMARY_SAMPLE_UNITS were sampled in each YEAR?**
+
+The `group_by(YEAR)` function splits the data into groups by `YEAR` (1 row per year).
+
+`summarize(n_units_unique = n_distinct(PRIMARY_SAMPLE_UNIT)` creates a new column (`n_units_unique`) with values computed from equation (`n_distinct(PRIMARY_SAMPLE_UNIT)`), which counts the number of unique sampling units in each group (aka year).
+
+::: callout-tip
+**Tip:** Structure of the **summarize function** is `summarize(new_col_name = equation_to_compute_value)`
+:::
+
+```{r}
+density_nunits_year <- density_groups %>%
+  group_by(YEAR) %>%
+  summarize(n_units_unique = n_distinct(PRIMARY_SAMPLE_UNIT))
+
+print(density_nunits_year) # print the created df for easy viewing in markdown pdf
+```
+
+## **5) How many unique PRIMARY_SAMPLE_UNITS were sampled in each YEAR and PROT combination?**
+
+Same code as question 4 but add additional grouping variable (`PROT`). The `group_by(YEAR, PROT)` function creates groups for each **`YEAR`–`PROT` combination**.
+
+::: callout-important
+**Important:** Add `.groups = "drop"` to **prevent nested grouping** (grouped by `YEAR`, then `PROT` in each year) in the output. If you’re going to keep chaining operations to the df, you don’t want hidden grouping messing things up.
+:::
+
+```{r}
+density_nunits_yearprot <- density_groups %>%
+  group_by(YEAR, PROT) %>%
+  summarize(
+    n_unique_units = n_distinct(PRIMARY_SAMPLE_UNIT),
+    .groups = "drop") # removes nested grouping in output
+
+print(density_nunits_yearprot) # print the created df for easy viewing in markdown pdf
+```
+
+## **6) How many unique PRIMARY_SAMPLE_UNITS were sampled in each YEAR, PROT and STRAT combination?**
+
+```{r}
+density_nunits_yearprotstrat <- density_groups %>%
+  group_by(YEAR, PROT, STRAT) %>%
+  summarize(
+    n_unique_units = n_distinct(PRIMARY_SAMPLE_UNIT),
+    .groups = "drop")
+```
+
+## **7) What is the difference between the following two expressions? The summarize and mutate calls after the group_by do very different things. In what situations would you use them?**
+
+### **data %\>% group_by(YEAR) %\>% summarize( n = n_distinct(PRIMARY_SAMPLE_UNIT))**
+
+The `summarize()` function **collapses** **each group down** **to** **one row per group**.
+
+The created df has 2 columns (`YEAR` and `n`) with 1 row per year (`2017`, `2019`, and `2021`). The `n` column created by `summarize(n = n_distinct(PRIMARY_SAMPLE_UNIT))` contains the calculated number of distinct PRIMARY_SAMPLE_UNITs sampled in each year.
+
+Use the summarize function when you want an [***aggregated summary***]{.underline} of your data, like counts, averages, medians, etc. It answers questions like*“How many unique sites were sampled in each year?”* or *“What’s the mean value per group?”*
+
+```{r}
+density_summarize <- density_groups %>% 
+  group_by(YEAR) %>%
+  summarize(n = n_distinct(PRIMARY_SAMPLE_UNIT))
+
+print(density_summarize) # print the created df for easy viewing in markdown pdf
+```
+
+### **data %\>% group_by(YEAR) %\>% mutate( n = n_distinct(PRIMARY_SAMPLE_UNIT))**
+
+The `mutate()` function **adds a** **new column** [**WITHOUT**]{.underline} **collapsing** **any preexisting columns** in the original df.
+
+The created df has all of the columns in rows in the original df (`density_newcols`) PLUS a new column `n`. The `n` column created by `mutate(n = n_distinct(PRIMARY_SAMPLE_UNIT))` contains the calculated number of distinct PRIMARY_SAMPLE_UNITs sampled in each year, **\*but every row with the same value in the** **`YEAR`** **column will have an identical value in the `n` column** (so for example, all rows in year 2019 will have equivalent value in column `n`).
+
+Use the mutate function when you want to [***preserve all rows***]{.underline} but add a new variable that gives group-level context. It answers questions like *“For each row, how many unique sites were sampled in that year?”* or *“For each row, what’s the mean value of my group?”*
+
+```{r}
+density_mutate <- density_groups %>% 
+  group_by(YEAR) %>%
+  mutate(n = n_distinct(PRIMARY_SAMPLE_UNIT))
+```
+
+## **8) Create a new dataframe that shows mean density of each species per year. (*hint:* see table)**
+
+|          |                |                 |
+|:---------|:---------------|:----------------|
+| **YEAR** | **SPECIES_CD** | **meanDensity** |
+| 2017     | BAL VETU       | 0.224           |
+| 2019     | CEP FULV       | 0.685           |
+
+The `group_by(YEAR, SPECIES_CD)` function creates 1 row per species for each year (3 different years x 8 different species = 24 total rows).
+
+The `summarize(meanDensity = mean(density)` function creates a new column (`meanDensity`) with values calculated by the equation `= mean(density)`.
+
+```{r}
+meandensity_spyr <- density_groups %>%
+  group_by(YEAR, SPECIES_CD) %>%
+  summarize(
+    meanDensity = mean(density),
+    .groups = "drop")
+```
+
+## **9) Create a new dataframe that shows mean density of each species in each PROT per year. (*hint:* see table)**
+
+|          |                |          |                 |
+|:---------|:---------------|:---------|:----------------|
+| **YEAR** | **SPECIES_CD** | **PROT** | **meanDensity** |
+| 2017     | BAL VETU       | 0        | 0.229           |
+| 2019     | CEP FULV       | 1        | 0.308           |
+
+The `group_by(YEAR, SPECIES_CD, PROT)` function creates 1 row per species for each year in each protection level (3 different years x 8 different species x 2 different protection levels = 48 total rows).
+
+The `summarize(meanDensity = mean(density)` function creates a new column (`meanDensity`) with values calculated by the equation `= mean(density)`.
+
+```{r}
+meandensity_spyrprot <- density_groups %>%
+  group_by(YEAR, SPECIES_CD, PROT) %>%
+  summarize(
+    meanDensity = mean(density),
+    .groups = "drop")
+```
+
+## **10) In the "PSU_Fish_Density.csv" data set, the PROT field refers to sites that are inside the VI National Park (PROT = 1) and sites that are outside the Park (PROT = 0). How many of the 4 groups had higher densities inside the National Park?**
+
+[[**background**]{.underline}**:** in question three, a `group` column was added to the df that has four possible values determined based on the value in the `species_cd` column: 1. [grouper]{.underline} (cep fulv, epi gutt); 2. [snapper]{.underline} (lut anal, lut gris, ocy chry); 3. [parrotfish]{.underline} (spa viri); 4. [other]{.underline} (bal vetu, lac maxi).]{.smallcaps}
+
+First, create a df that has **1 row per each group in each protection level** *(4 groups x 2 protection levels = 8 rows)*, with a `group` column, a `PROT` column, and a new `avDensity` column that **calculates the mean density** (`= mean(density,`) for each row.
+
+::: callout-tip
+**Tip:** The `na.rm = TRUE` argument in the `mean()` function tells R to **ignore missing values** when doing the calculation. If you do NOT include this argument and there are `NA`s present for a group in any rows in the column (`density`) used in the `mean()` calculation, the created column (`meanDensity`) will return `NA` for all rows within that group.
+:::
+
+```{r}
+group_prot_avdensity <- density_groups %>%
+  group_by(group, PROT) %>%
+  summarize(
+    avDensity = mean(density, na.rm = TRUE),
+    .groups = "drop")
+
+print(group_prot_avdensity) # print the created df for easy viewing in markdown pdf
+```
+
+Second, use the `pivot_wider()` function to **reshape** `group_prot_avdensity` so that the new df has *1 row per each group*, with a `group` column and **2** **separate columns** for the mean density in protection level 0 (`PROT_0_avDensity`) and the mean density in protection level 1 (`PROT_1_avDensity`).
+
+The `names_glue = "PROT_{PROT}_avDensity"` argument allows for custom column names where `{PROT}` inserts the value of each row in the `PROT` column (0 or 1).
+
+```{r}
+group_prot_wider <- group_prot_avdensity %>%
+  pivot_wider(
+    names_from = PROT,
+    values_from = avDensity,
+    names_glue = "PROT_{PROT}_avDensity"
+  )
+
+print(group_prot_wider) # print the created df for easy viewing in markdown pdf
+```
+
+Third, use the `mutate()` function to **add a column** so that the new df has the *same rows and columns* from `group_prot_wider` plus a **new** `higherInside` column with **logical values** (`TRUE` or `FALSE`) calculated by checking if `PROT1 > PROT0`.
+
+```{r}
+group_prot_logical <- group_prot_wider %>%
+  mutate(higherInside = PROT_1_avDensity > PROT_0_avDensity)
+
+print(group_prot_logical) # print the created df for easy viewing in markdown pdf
+```
+
+Finally, **count how many groups have higher densities inside the National Park** (`PROT` = 1) than outside of it (`PROT` = 0).
+
+`group_prot_logical$higherInside` is a vector of logical values (`c(FALSE, FALSE, FALSE, TRUE)`). R counts each `FALSE` value in the vector as `0` and each `TRUE` value as `1`.
+
+The `sum()` function **calculates the total sum of all values (**`0` **or** `1`**) in vector** `group_prot_logical$higherInside` to determine the number of rows (aka groups) that have higher mean density in `PROT_1_avDensity` than in `PROT_0_avDensity`.
+
+```{r}
+group_prot_count <- sum(group_prot_logical$higherInside)
+
+print(group_prot_count) # print result of the sum() calculation
+```
