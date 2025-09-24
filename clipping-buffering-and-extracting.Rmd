@@ -190,36 +190,10 @@ Open the **Select Layer By Location (Data Management)** tool from search bar:
 
 -   In the [Contents]{.underline} side pane under '[Map]{.underline}', select the `ProposedMooringLocations` shapefile. **Data** top ribbon \> **Layer From Selection** \> rename new layer as `Mooring_CRCHbuffer50m`.
 
-::: callout-warning
-**Warning:** [DIDN'T FINISH PICKING FINAL 5 MOORINGS BECAUSE DIDN'T KNOW WHAT CRITERIA TO GO BY...]{.underline} (added section for **Near (Analysis)** tool so would know how to calculate distance in future scenarios, **BUT ignoring results** for the purpose of this activity)!
-:::
-
-Open the **Near (Analysis)** tool from search bar:
-
-```{r}
-# Input Features: Mooring_CRCHbuffer50m
-# Near Features: NOAA_clipSTEER_habitatCRCH
-# Search Radius: (leave blank)
-# *CHECK BOX* ☑ Location (this adds NEAR_X and NEAR_Y columns)
-# Method: Planar
-# Field Names > Property: Feature ID | Field Name: NEAR_FID
-# Field Names > Property: Distance | Field Name: NEAR_DIST
-# Field Names > Property: Location x-coordinate | Field Name: NEAR_X
-# Field Names > Property: Location y-coordinate | Field Name: NEAR_Y
-# Distance Unit: Meters
-```
-
--   In the [Contents]{.underline} side pane under '[Map]{.underline}', select the `Mooring_CRCHbuffer50m` shapefile. **Data** top ribbon \> open **Attribute Table**.
-    -   `NEAR_FID` column is the ID of the nearest coral reef/colonized hardbottom feature
-    -   `NEAR_DIST` is the distance in meters to the nearest coral reef/colonized hardbottom feature
-    -   `NEAR_X` and `NEAR_Y` are the coordinates of the nearest coral reef/colonized hardbottom feature
--   **Table** top ribbon \> **Sort** drop-down menu \> **Custom Sort** \> Field: `NEAR_DIST` \| Sort: Descending.
--   **Manually select** the first 5 rows in the sorted Attribute Table *(aka the 5 rows with the greatest distance to the nearest coral reef/colonized hardbottom feature)*.
-
 ## **Along with mooring locations being at least 50m away from mapped coral reef or colonized hardbottom, mooring locations must be shallower than 30ft depth. Propose new 'best' site locations. (*hint...* "Extract Values to Points" tool or "Extract Multi Values to Points" tool – what is the difference?)**
 
 |  |  |  |
-|:---|:---|:---|
+|:-----------------------|:-----------------------|:-----------------------|
 | **Feature** | **Extract Values to Points** tool | **Extract Multi Values to Points** tool |
 | Number of rasters | 1 only | 2 or more |
 | Output | Creates a new feature class | Updates existing feature class |
@@ -242,6 +216,7 @@ In the [Contents]{.underline} side pane under '[Map]{.underline}', select the ne
 **Select By Attributes** tool:
 
 -   Since you want only the moorings located in water shallower than 30 ft and depth values are negative, you want to select only rows with a `RASTERVALU` greater than -9.144
+-   Layer From Selection \> name new layer `Mooring_CRCHbuffer50m_shallower30ft`
 
 ```{r}
 # Input Rows: Mooring_CRCHbuffer50m_depth
@@ -249,8 +224,34 @@ In the [Contents]{.underline} side pane under '[Map]{.underline}', select the ne
 # Where: 'RASTERVALU' 'is greater than' '-9.144'
 ```
 
-**Data** top ribbon \> **Layer From Selection** \> rename new layer as `Mooring_CRCHbuffer50m_shallower30ft`.
+> *There are 11 total points that fit the criteria of being \>50 m away from coral reef/colonized hardbotttom habitat and shallower than 30 ft deep. The 11 points remaining in `Mooring_CRCHbuffer50m_shallower30ft` are spaced out into 5 little clusters with 1-4 points per cluster. Therefore, I added a 'Cluster' column in the Attribute Table of this layer and manually entered letters (A, B, C, D, E) to group the points by which cluster they are in. **NOW GOING TO CALCULATE THE DISTANCE TO OF EACH POINT TO THE NEAREST CORAL REEF/COLONIZED HARDBOTTOM HABITAT FOR EACH POINT (ALREADY HAVE DEPTH OF EACH POINT IN RASTERVALU COLUMN) - THIS WAY I CAN DETERMINE WHICH SINGLE POINT PER EACH CLUSTER IS THE FARTHEST FROM CRCH HABITAT AND THE SHALLOWEST .***
 
-::: callout-warning
-**Warning:** DIDN'T FINISH PICKING FINAL 5 MOORINGS, [**BUT**]{.underline} since the mooring points in `Mooring_CRCHbuffer50m_shallower30ft` are clustered into 5 separate areas within the STEER boundary, would probably pick the 1 point from each cluster that has highest `NEAR_DIST` value (aka furthest from a coral reef/colonized hardbottom feature)!
-:::
+Open the [**Near (Analysis)**]{.underline} tool from search bar:
+
+```{r}
+# Input Features: Mooring_CRCHbuffer50m_shallower30ft
+# Near Features: NOAA_clipSTEER_habitatCRCH_pwb50m
+# Search Radius: (leave blank)
+# *CHECK BOX* ☑ Location (this adds NEAR_X and NEAR_Y columns)
+# Method: Planar
+# Field Names > Property: Feature ID | Field Name: NEAR_FID
+# Field Names > Property: Distance | Field Name: NEAR_DIST
+# Field Names > Property: Location x-coordinate | Field Name: NEAR_X
+# Field Names > Property: Location y-coordinate | Field Name: NEAR_Y
+# Distance Unit: Meters
+```
+
+-   In the [Contents]{.underline} side pane under '[Map]{.underline}', select the `Mooring_CRCHbuffer50m_shallower30ft` shapefile \> open **Attribute Table**.
+    -   `NEAR_FID` column is the ID of the nearest coral reef/colonized hardbottom feature
+    -   `NEAR_DIST` is the distance in meters to the nearest coral reef/colonized hardbottom feature
+    -   `NEAR_X` and `NEAR_Y` are the coordinates of the nearest coral reef/colonized hardbottom feature
+-   **Manually select** the first 5 rows in the sorted Attribute Table *(aka the 5 rows with the greatest distance to the nearest coral reef/colonized hardbottom feature)*.
+
+Select rows for 5 final proposed mooring locations in `Mooring_CRCHbuffer50m_shallower30ft` and create new layer from selection; name as `FINAL_5_MOORING_LOCATIONS`.
+
+**EXPORT FINAL LAYER TO USE IN NEXT WEEK'S ACTIVITY (\*saving to Files folder instead of in current project folder):**
+
+Right-click on `FINAL_5_MOORING_LOCATIONS` layer \> Data \> Export Features:
+
+-   *Input Features:* `FINAL_5_MOORING_LOCATIONS`
+-   *Output Feature Class:* `C:\Users\900123629\Documents\ArcGIS\Files\MES565_files\MES565_exported_files\FINAL_5_MOORING_LOCATIONS_ExportFeatures.shp`
